@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Env
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Data
+data/raw/*
+data/interim/*
+data/processed/*
+
+# Outputs
+outputs/*
+
+# DuckDB
+*.duckdb
+*.duckdb.wal
