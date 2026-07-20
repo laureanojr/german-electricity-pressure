@@ -27,11 +27,12 @@ reasoning, not an official statement.
 
 ## Things I genuinely don't understand yet (and why each matters)
 
-1. **Which numeric filter ID is which series — officially.** I have official *names* [M §D] and I
-   probe-verified a handful of IDs on the live host [API], but the authoritative name↔ID binding
-   lives in the Download Center's JavaScript UI, which I could not load this session. So the
-   realised-generation IDs in the dictionary are still *unconfirmed*. Until I confirm them against
-   the Download Center, I won't hard-code them. [inference on the gap; official names M §D]
+1. **Which numeric filter ID is which series — RESOLVED.** SMARD's own app config
+   `market_data_configuration.json` [CFG] is the authoritative name↔ID map: every module lists its
+   `data_id` (= chart_data filter), name, unit and source resolution. All in-scope IDs are now
+   confirmed there (load, residual, every generation fuel, commercial vs physical net export).
+   Filter tag [CFG] added to the data dictionary. (Still to pull from [CFG]: the forecast-residual
+   ID; and 4387 pumped-storage consumption.)
 
 2. **How badly does incomplete generation coverage bias residual load?** Official: realised
    generation is fully measured across all zones **only for Wind Offshore and Nuclear**; biomass,
@@ -90,10 +91,14 @@ reasoning, not an official statement.
 
 ## What Step 1 must close before moving on
 
-- Confirm the filter ID ↔ name bindings against the official Download Center (items 1, plus the
-  forecast-residual ID and the realised-generation IDs).
-- Resolve commercial cross-border coverage for 2019–2025 via the Download Center — this blocks one
-  of the four analyses.
+- Filter ID ↔ name bindings — done via [CFG]. Left over: pull the forecast-residual ID and 4387
+  from the config, and a cheap Download-Center reconfirm of the retired 661.
+- Commercial cross-border coverage — **RESOLVED.** SMARD's config [CFG] confirms `4629` =
+  "Kommerzieller Nettoexport" (commercial) and `714` = "Physikalischer Nettoexport" (physical).
+  Commercial net export spans the full window via two data_ids of the *same* concept: **661
+  (2019-01 → 2020-12-31) then 4629 (2021-01 → present)**, with a Nov–Dec 2020 overlap to validate
+  the join. So the import-reliance analysis can keep the full 2019–2025 window — no scope cut
+  needed — as long as it uses only the commercial series and never mixes in physical flow (714).
 - Confirm price granularity across the window and lock the aggregation (item 3).
 - Verify the historical forecast columns are the as-published day-ahead values (item 8).
 - Quantify the conventional-generation under-coverage well enough to caveat residual load (item 2).

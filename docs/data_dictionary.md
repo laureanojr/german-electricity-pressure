@@ -12,10 +12,17 @@ relied on until checked against an official SMARD source. Tags:
 - **[DU]** — SMARD "Data use" page. `https://www.smard.de/en/datennutzung`
 - **[WF]** — SMARD wiki "Forecast data". `https://www.smard.de/page/en/wiki-article/5884/206318/forecast-data`
 - **[WC]** — SMARD wiki "Cross-border electricity trade". `https://www.smard.de/page/en/wiki-article/6076/6012/cross-border-electricity-trade`
+- **[WC-DE]** — SMARD wiki (DE) "Stromhandel und physikalischer Stromfluss", whose official
+  "Marktdaten" deep-link lists the commercial category (prefix 22, incl. module 22000661) and the
+  physical series 31000714. `https://www.smard.de/page/home/wiki-article/446/596/stromhandel-und-physikalischer-stromfluss`
 - **[WP]** — SMARD wiki "Electricity trade and physical flow of electricity". `https://www.smard.de/page/en/wiki-article/5884/6140/electricity-trade-and-physical-flow-of-electricity`
 - **[API]** — Value observed directly from the official chart-data host on `smard.de` (exact URL given).
-- **[enum-unofficial]** — third-party `bundesAPI/deutschland` GitHub client. **Not an official
-  SMARD source.** Used only to flag a candidate; never as proof.
+- **[CFG]** — SMARD's own application config, official:
+  `https://www.smard.de/app/chart_configuration/market_data_configuration.json`. This is the
+  authoritative name↔ID map: each module carries `"data_id"` (= the chart_data filter),
+  `"name"`, `"unit"`, `"source_resolution"`, and category. Read live from smard.de.
+- **[enum-unofficial]** — third-party `bundesAPI/deutschland` GitHub client. Superseded by [CFG];
+  no longer relied on below.
 
 **Project window:** 2019-01-01 → 2025-12-31, hourly. Finest native grain is quarter-hour. [M §2]
 
@@ -64,44 +71,41 @@ which is why a 2019 start sits cleanly inside a single zone definition. [WC cont
 
 ## Series in scope
 
-> **On the numeric filter IDs.** Series *names and definitions* below are official [M]. The
-> numeric `chart_data` filter IDs are an implementation detail of the SMARD web app and are **not
-> published on any official SMARD page I could reach** (the Download Center, which shows the
-> name↔ID binding, is a JavaScript app I could not load in this session). Where I fetched an ID
-> and inspected its data, it is marked **probe-verified** (the values behave as the name implies,
-> on the official API host). Where I have only the third-party enum, it is marked
-> **unconfirmed — confirm in Download Center**. Do not hard-code an unconfirmed ID as fact yet.
+> **On the numeric filter IDs.** These are now **officially confirmed.** SMARD's own app config
+> [CFG] maps each `data_id` (= the chart_data filter) to its official name, unit, and source
+> resolution. Every ID below is quoted from that file unless noted. Names are also in the manual
+> [M §D]. (The earlier "unconfirmed / third-party enum" caveat is retired — [CFG] supersedes it.)
 
 ### Demand — official names [M §D 2.1]
 
 | Series (EN / DE) | Filter ID | ID status | Grain | Unit |
 |---|---|---|---|---|
-| Total grid load / Stromverbrauch: Gesamt (Netzlast) | 410 | probe-verified [API] | 15-min + hour | MWh |
-| Residual load, realised / Stromverbrauch: Residuallast | 4359 | probe-verified [API] | 15-min + hour | MWh |
-| Pumped-storage consumption / Stromverbrauch: Pumpspeicher | 4387 | unconfirmed [enum-unofficial] | 15-min + hour | MWh |
+| Total grid load / Stromverbrauch: Gesamt (Netzlast) | 410 | confirmed [CFG] + probe [API] | 15-min + hour | MWh |
+| Residual load, realised / Stromverbrauch: Residuallast | 4359 | confirmed [CFG] + probe [API] | 15-min + hour | MWh |
+| Pumped-storage consumption / Stromverbrauch: Pumpspeicher | 4387 | unconfirmed (not in [CFG] slice read) | 15-min + hour | MWh |
 
 SMARD publishes a realised residual load of its own (4359). The project computes its own residual
 (load − wind − solar); keep them separate. [M §D 2.1.2 defines Residuallast]
 
-### Generation — official names and fuel list [M §D 1: Biomasse, Wind Offshore, Wind Onshore, Photovoltaik, Braunkohle, Steinkohle, Erdgas, Sonstige Erneuerbare, Wasserkraft, Kernenergie, Pumpspeicher, Sonstige Konventionelle]
+### Generation — filter IDs officially confirmed [CFG]
 
-All realised-generation filter IDs below are **unconfirmed [enum-unofficial]** — I did not probe
-them this session and no official page binds them to names. Names are official [M §D 1].
+Every `data_id`→name below is quoted from `market_data_configuration.json` [CFG]. Realised
+generation (category "Realisierte Erzeugung"); source resolution quarter-hour; unit MWh.
 
-| Series (EN / DE) | Candidate ID | Role |
-|---|---|---|
-| Wind onshore / Wind Onshore | 4067 | VRE (residual) |
-| Wind offshore / Wind Offshore | 1225 | VRE (residual) |
-| Solar / Photovoltaik | 4068 | VRE (residual) |
-| Lignite / Braunkohle | 1223 | Conventional |
-| Hard coal / Steinkohle | 4069 | Conventional |
-| Natural gas / Erdgas | 4071 | Conventional |
-| Biomass / Biomasse | 4066 | Context (renewable, not VRE) |
-| Hydro / Wasserkraft | 1226 | Context |
-| Nuclear / Kernenergie | 1224 | Context (to ~0 after April 2023) |
-| Pumped storage / Pumpspeicher | 4070 | Context |
-| Other conventional / Sonstige Konventionelle | 1227 | Context |
-| Other renewable / Sonstige Erneuerbare | 1228 | Context |
+| Series (EN / DE) | Filter ID | Confirmed name [CFG] | Role |
+|---|---|---|---|
+| Wind onshore / Wind Onshore | 4067 | Wind Onshore | VRE (residual) |
+| Wind offshore / Wind Offshore | 1225 | Wind Offshore | VRE (residual) |
+| Solar / Photovoltaik | 4068 | Photovoltaik | VRE (residual) |
+| Lignite / Braunkohle | 1223 | Braunkohle | Conventional |
+| Hard coal / Steinkohle | 4069 | Steinkohle | Conventional |
+| Natural gas / Erdgas | 4071 | Erdgas | Conventional |
+| Biomass / Biomasse | 4066 | Biomasse | Context (renewable, not VRE) |
+| Hydro / Wasserkraft | 1226 | Wasserkraft | Context |
+| Nuclear / Kernenergie | 1224 | Kernenergie | Context (to ~0 after April 2023) |
+| Pumped storage / Pumpspeicher | 4070 | Pumpspeicher | Context |
+| Other conventional / Sonstige Konventionelle | 1227 | Sonstige Konventionelle | Context |
+| Other renewable / Sonstige Erneuerbare | 1228 | Sonstige Erneuerbare | Context |
 
 > **Coverage caveat — official and important.** Realised generation is *not* fully measured for
 > every fuel. Full coverage by measurement across all control zones exists **only for Wind
@@ -135,22 +139,42 @@ difference (total − wind/PV). [M §D 1.2]
 | Forecast "other" generation / Sonstige Prognostizierte Stromerzeugung | 715 | unconfirmed [enum-unofficial] | — | SMARD-computed (total − wind/PV). [M §D 1.2] |
 | Forecast residual load / Prognostizierter Stromverbrauch: Residuallast | — | ID not identified | 15-min | Exists as an official category [M §D 2.2.2]; ID not found. Or derive = fc load − fc wind − fc solar (match the realised-side definition). |
 
-### Cross-border trade — official names [M §D 3.2 Kommerzieller Außenhandel; WC/WP], coverage **unresolved**
+### Cross-border trade — **resolved** [CFG] confirms the identities; coverage stitches across the full window
 
-| Series (EN / DE) | Filter ID | ID status | Grain | Notes |
-|---|---|---|---|---|
-| Commercial net export / Kommerzieller Außenhandel: Nettoexport | 4629 | probe-verified for 2025 only [API] | hour | +export / −import (2025 values −11 to +13 GWh). **All-null for the 2019 week tested**, on DE and DE-LU. [API] |
+The config settles which series is which [CFG]:
 
-Two things to flag:
+- **`data_id 4629` = "Kommerzieller Nettoexport" (Commercial net export)**, category "Kommerzieller
+  Außenhandel", source resolution quarter-hour, unit MWh, regions incl. DE and DE-LU. [CFG]
+- **`data_id 714` = "Physikalischer Nettoexport" (Physical net export)**, category "Physikalischer
+  Stromfluss". [CFG] **Different concept — do not use for the commercial "import reliance" story,
+  and never mix it with the commercial series.**
 
-1. **Commercial ≠ physical.** Commercial foreign trade is the traded (market-coupling) position,
-   supplied hourly and updated after each intraday session; the physical cross-border flow is a
-   separate, distinct category. [WC, WP] Commercial is the right series for an "import reliance"
-   read (a commercial position, not a physical-adequacy signal). Do not switch between them.
-2. **Coverage gap — open.** Filter 4629 returned real 2025 data but was all-null for the 2019
-   week on both regions. [API] So commercial net export back to 2019 is **not confirmed available
-   via this endpoint**. **Open task:** source commercial foreign trade for the full window from
-   the official Download Center and confirm the exact series/ID that spans 2019–2025.
+Both are signed (+ = net export, − = net import). [API]
+
+**Commercial net export coverage — full 2019–2025 is achievable, but via two data_ids that
+change over at end-2020 (same concept, "Kommerzieller Nettoexport"):**
+
+| chart_data filter | Role | Coverage (bisected live) [API] |
+|---|---|---|
+| 661 | Older commercial net export (Kommerzieller Nettoexport; module `22000661` sits in the commercial category) [WC-DE] | **2019-01 → 2020-12-31.** Full 2019 data; ends at 2020-12-31 (null from 2021-01-01; empty in 2021). |
+| 4629 | Current commercial net export [CFG] | **~2020-11 → present.** Null in 2019/most of 2020; data from mid-Nov 2020 onward (2025 present). |
+
+They **overlap in Nov–Dec 2020**, so the join can be validated rather than assumed. In the overlap
+they are close but not identical hour-by-hour (661 = 9076/7479/6806 vs 4629 = 9596/8689/8197 for
+2020-12-28 00:00–02:00) [API] — expected, since they are two processing generations of the same
+quantity (661 hourly-origin, 4629 quarter-hour-origin). Prefer one series per timestamp across the
+seam; don't average them.
+
+**Build rule.** Commercial net export for 2019–2025 = **661 for 2019-01-01 → 2020-12-31, then 4629
+from 2021-01-01 → present** (validate against the Nov–Dec 2020 overlap). This keeps the whole
+series a single consistent concept (commercial), so the import-reliance analysis can run the full
+window. Physical flow (714 and its successors) stays out of that column.
+
+> Note: `data_id 661` is not in the *current* config file (it's a retired series still served by
+> the chart-data host); its commercial identity rests on the official German trade-page deep-link,
+> where module `22000661` is listed under "kommerzieller Außenhandel" [WC-DE], plus its net-export
+> value shape [API]. Worth a 5-minute reconfirm in the Download Center when convenient, but the
+> commercial-vs-physical question itself is now settled by [CFG].
 
 ---
 
@@ -169,7 +193,13 @@ Two things to flag:
 
 ## What is still NOT officially confirmed (do before trusting the build)
 
-- The numeric filter ID ↔ name binding for every series (needs the official Download Center).
-- The realised-generation IDs (1223/4067/… — unprobed and unofficial this session).
-- The forecast-residual-load filter ID.
-- Commercial cross-border coverage for 2019–2025.
+Most of the earlier gaps are now closed by the official config [CFG] and the cross-border
+bisection. Remaining items:
+
+- The **forecast-residual-load** filter ID (forecast side of Residuallast) — not yet pulled from
+  [CFG]; either find it in the config or derive fc-residual = fc-load − fc-wind − fc-solar.
+- `data_id 661`'s commercial label — settled well enough via [WC-DE] + values, but a 5-minute
+  Download-Center reconfirm is cheap insurance.
+- Pumped-storage consumption (4387) — not in the config slice read this session.
+- Everything else (load, residual, all generation fuels, price, day-ahead forecasts, commercial
+  net export 4629, physical net export 714) is confirmed via [CFG] and/or live probes.
