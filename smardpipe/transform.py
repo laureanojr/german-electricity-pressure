@@ -78,8 +78,17 @@ def aggregate_to_hour(df: pd.DataFrame, kind: str, resolution: str) -> pd.Series
 
 
 def series_hourly(raw_dir: Path, s: S.SmardSeries) -> pd.Series:
-    """Fully processed hourly Series for one registered series."""
-    df = _read_all_weeks(raw_dir, s)
+    """Fully processed hourly Series for one registered series.
+
+    If the series has no raw files for the requested period (e.g. nuclear after
+    the 2023 phase-out, or the retired commercial series 661 in recent years),
+    return an empty Series. The column then reindexes to all-gap, and the
+    coverage check (which only polices required series) decides if that matters.
+    """
+    try:
+        df = _read_all_weeks(raw_dir, s)
+    except FileNotFoundError:
+        return pd.Series(dtype="float64", name="value")
     return aggregate_to_hour(df, s.kind, s.resolution)
 
 

@@ -117,3 +117,32 @@ def test_end_to_end_build(tmp_path):
     finally:
         con.close()
     assert n == len(fact)
+
+
+def test_absent_context_series_does_not_break_build(tmp_path):
+    # Reproduces the real June-2024 case: nuclear (phased out 2023) and the
+    # retired 661 have no files. Build must still succeed.
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    start, end = "2024-06-01", "2024-06-07"
+    _write_synthetic_raw(raw, start, end)
+    for f in list(raw.glob("1224_*.json")) + list(raw.glob("661_*.json")):
+        f.unlink()
+
+    fact = build.build_fact_hourly(raw, start=start, end=end)
+    assert fact["nuclear"].isna().all()              # absent -> all gap
+    assert (fact["commercial_net_export"] == 500.0).all()  # 4629 only
+    build.assert_coverage(fact)  # nuclear is not required -> still passes
+
+
+def test_absent_required_series_fails_coverage(tmp_path):
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    start, end = "2024-06-01", "2024-06-07"
+    _write_synthetic_raw(raw, start, end)
+    for f in raw.glob("410_*.json"):  # drop load (required)
+        f.unlink()
+
+    fact = build.build_fact_hourly(raw, start=start, end=end)
+    with pytest.raises(AssertionError, match="load"):
+        build.assert_coverage(fact)
