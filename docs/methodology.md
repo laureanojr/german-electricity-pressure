@@ -89,6 +89,48 @@ reasoning, not an official statement.
     could look like a real trend. Worth a month-over-month sanity scan per series before trusting
     any long-run comparison. [inference]
 
+## 2025 reconciliation (the sanity check with teeth)
+
+`scripts/reconcile_2025.py` compares completed-2025 aggregates from `fact_hourly`
+against Bundesnetzagentur's published figures [BNetzA-PR]. All four are within tolerance,
+and it fails loudly if any drifts:
+
+| Metric | `fact_hourly` | Official | Diff |
+|---|---|---|---|
+| Net electricity generation | 437.90 TWh | 437.6 TWh | +0.07% |
+| Avg day-ahead price | €89.3219/MWh | €89.32/MWh | ~0 |
+| Commercial net imports | 21.92 TWh | 21.9 TWh | +0.10% |
+| Hours with negative price | 573 | 573 | exact |
+
+**Definition pinned.** BNetzA's "actual generation" is **net electricity generation** — the
+electricity fed into the general supply network *less* power plants' own consumption. It
+excludes the Deutsche Bahn network, industrial and closed distribution networks, and
+self-consumed household PV. [BNetzA-PR] That is exactly the sum of all twelve SMARD realised
+generation categories, **pumped-storage output included** — including it is what makes the
+total match (excluding it gives 428.0 TWh, ~10 TWh short). Per-source, the match is tight:
+
+| | `fact_hourly` (TWh) | Official (TWh) |
+|---|---|---|
+| Renewables total | 257.76 | 257.5 |
+| — onshore wind | 106.77 | 106.5 |
+| — solar | 73.78 | 74.1 |
+| — offshore wind | 26.20 | 26.1 |
+| — biomass | 35.87 | 36.0 |
+| Conventional total | 180.14 | 180.1 |
+| — lignite | 67.17 | 67.2 |
+| — gas | 60.55 | 60.6 |
+| — hard coal | 28.16 | 28.2 |
+
+**Residual explained.** The +0.3 TWh (0.07%) excess is data revision plus rounding, not a
+definitional mismatch: official per-source figures are quoted to 0.1 TWh, the release is a
+Jan-2026 snapshot, and SMARD data "may be updated on the basis of new findings" (also manual
+§1.3). Per-source diffs are small and bidirectional (onshore +0.27, solar −0.32), consistent
+with revision noise. The conventional total matches to 0.04 TWh.
+
+Source: **[BNetzA-PR]** Bundesnetzagentur, "Bundesnetzagentur publishes 2025 electricity
+market data", press release 2026-01-05.
+`https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/EN/2026/20260104_SMARD.html`
+
 ## What Step 1 must close before moving on
 
 - Filter ID ↔ name bindings — done via [CFG]. Left over: pull the forecast-residual ID and 4387

@@ -32,7 +32,16 @@ python scripts/download_smard.py                 # full 2019–2025 window
 # 2. Build fact_hourly: aggregate 15-min → hour, compute residual, stitch the
 #    commercial net-export series, assert coverage, write parquet + DuckDB.
 python scripts/build_fact_hourly.py
+
+# 3. Sanity check: reconcile completed-2025 totals against official
+#    Bundesnetzagentur figures (fails loudly if any drifts).
+python scripts/reconcile_2025.py
 ```
+
+The 2025 reconciliation currently passes on all four metrics — net generation
+437.90 vs 437.6 TWh, day-ahead price €89.32 (exact), net imports 21.92 vs 21.9 TWh,
+and 573 negative-price hours (exact). Details and the pinned "net generation"
+definition are in [`docs/methodology.md`](docs/methodology.md).
 
 Outputs: `data/processed/fact_hourly.parquet` and table `fact_hourly` in
 `data/processed/gep.duckdb`. The build **fails loudly** if a required series has a
