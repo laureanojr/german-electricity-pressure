@@ -37,10 +37,19 @@ python scripts/build_fact_hourly.py
 #    load / wind / solar / residual, with error columns.
 python scripts/build_forecast_hourly.py
 
-# 4. Sanity check: reconcile completed-2025 totals against official
+# 4. Build the marts: mart_conditions_hourly (the dashboard base) and
+#    mart_daily_summary (per-day rollup).
+python scripts/build_mart.py
+
+# 5. Sanity check: reconcile completed-2025 totals against official
 #    Bundesnetzagentur figures (fails loudly if any drifts).
 python scripts/reconcile_2025.py
 ```
+
+**Tables** (in `data/processed/gep.duckdb` + Parquet): `fact_hourly` and
+`fact_forecast_hourly` (one row per UTC hour), `mart_conditions_hourly` (hourly,
+adds residual/price deciles, VRE coverage, net-import & negative-price flags —
+the dashboard base), and `mart_daily_summary` (one row per Berlin day).
 
 The 2025 reconciliation currently passes on all four metrics — net generation
 437.90 vs 437.6 TWh, day-ahead price €89.32 (exact), net imports 21.92 vs 21.9 TWh,
@@ -68,9 +77,10 @@ One row per UTC hour, and you can trust the units:
 ## Layout
 
 ```
-smardpipe/        pipeline package (series, download, transform, build, forecast, reconcile)
-scripts/          thin CLIs: download_smard, build_fact_hourly, build_forecast_hourly, reconcile_2025
-tests/            fixture-based unit tests (units, DST, gaps, stitch, coverage, forecast, reconcile)
+smardpipe/        pipeline package (series, download, transform, build, forecast, reconcile, mart)
+scripts/          thin CLIs: download_smard, build_fact_hourly, build_forecast_hourly, build_mart, reconcile_2025
+sql/              mart_conditions_hourly.sql, mart_daily_summary.sql (DuckDB transforms)
+tests/            fixture-based unit tests (units, DST, gaps, stitch, coverage, forecast, reconcile, marts)
 docs/             data_dictionary.md, methodology.md
 data/             raw/ and processed/ (gitignored)
 ```

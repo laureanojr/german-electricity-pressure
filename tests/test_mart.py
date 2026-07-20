@@ -71,3 +71,26 @@ def test_deciles_cover_1_to_10_and_null_is_not_binned():
     assert sorted(good) == list(range(1, 11))
     # the gap row has NULL residual_load -> NULL decile (not decile 1)
     assert pd.isna(m.loc[10, "residual_decile"])
+
+
+def test_daily_summary_rollup():
+    n = 11
+    con = _con(_fact(n))
+    mart.build_mart(con)
+    mart.build_daily(con)
+    d = con.execute("SELECT * FROM mart_daily_summary").df()
+    con.close()
+
+    assert len(d) == 1  # all rows share one date
+    row = d.iloc[0]
+    assert row["n_hours"] == n
+    assert row["load_mwh"] == 11000.0            # 11 * 1000, summed
+    assert row["vre_generation_mwh"] == 2200.0   # 11 * 200
+    assert round(row["vre_coverage"], 3) == 0.2
+    # price averaged: mean of [-5, 1..10] = (-5 + 55) / 11
+    assert round(row["avg_price"], 3) == round((-5 + 55) / 11, 3)
+    assert row["negative_price_hours"] == 1
+    # net_import = +200 once, -200 ten times -> -1800 total, not an import day
+    assert row["net_import_mwh"] == -1800.0
+    assert row["net_import_hours"] == 1
+    assert bool(row["net_importer_day"]) is False

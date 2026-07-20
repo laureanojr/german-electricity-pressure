@@ -1,9 +1,10 @@
-"""CLI: build mart_conditions_hourly from fact_hourly in the DuckDB database.
+"""CLI: build the marts (conditions + daily summary) from fact_hourly.
 
     python scripts/build_mart.py
 
 Requires fact_hourly to exist (run scripts/build_fact_hourly.py first). Writes
-the DuckDB table mart_conditions_hourly and a Parquet copy in data/processed.
+DuckDB tables mart_conditions_hourly and mart_daily_summary plus Parquet copies
+in data/processed.
 """
 
 from __future__ import annotations
@@ -23,9 +24,10 @@ def main() -> None:
     ap.add_argument("--processed-dir", default="data/processed")
     args = ap.parse_args()
 
-    n = mart.build_from_duckdb(Path(args.duckdb), Path(args.processed_dir))
-    print(f"mart_conditions_hourly: {n:,} rows -> {args.duckdb} "
-          f"+ {args.processed_dir}/mart_conditions_hourly.parquet")
+    counts = mart.build_from_duckdb(Path(args.duckdb), Path(args.processed_dir))
+    for table, n in counts.items():
+        print(f"{table}: {n:,} rows -> {args.duckdb} "
+              f"+ {args.processed_dir}/{table}.parquet")
 
 
 if __name__ == "__main__":
