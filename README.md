@@ -33,7 +33,11 @@ python scripts/download_smard.py                 # full 2019–2025 window
 #    commercial net-export series, assert coverage, write parquet + DuckDB.
 python scripts/build_fact_hourly.py
 
-# 3. Sanity check: reconcile completed-2025 totals against official
+# 3. Build fact_forecast_hourly: day-ahead forecast vs actual for
+#    load / wind / solar / residual, with error columns.
+python scripts/build_forecast_hourly.py
+
+# 4. Sanity check: reconcile completed-2025 totals against official
 #    Bundesnetzagentur figures (fails loudly if any drifts).
 python scripts/reconcile_2025.py
 ```
@@ -64,9 +68,9 @@ One row per UTC hour, and you can trust the units:
 ## Layout
 
 ```
-smardpipe/        pipeline package (series registry, download, transform, build)
-scripts/          thin CLIs: download_smard.py, build_fact_hourly.py
-tests/            fixture-based unit tests (units, DST, gaps, stitch, coverage)
+smardpipe/        pipeline package (series, download, transform, build, forecast, reconcile)
+scripts/          thin CLIs: download_smard, build_fact_hourly, build_forecast_hourly, reconcile_2025
+tests/            fixture-based unit tests (units, DST, gaps, stitch, coverage, forecast, reconcile)
 docs/             data_dictionary.md, methodology.md
 data/             raw/ and processed/ (gitignored)
 ```

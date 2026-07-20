@@ -113,6 +113,32 @@ COMMERCIAL_NETEXPORT_NEW = SmardSeries(
 # the new series' coverage. (docs/data_dictionary.md, cross-border build rule.)
 COMMERCIAL_STITCH_BOUNDARY = "2021-01-01"
 
+# --- Day-ahead forecasts ----------------------------------------------------
+# All confirmed [CFG] as day-ahead forecast series (dashed lines in the SMARD
+# config), quarter-hour, MWh. Forecast residual is derived (see forecast.py),
+# not downloaded, so it matches the realised residual definition exactly.
+FORECAST_LOAD = SmardSeries(
+    "forecast_load", 411,
+    "Prognostizierter Stromverbrauch: Gesamt (Netzlast)",
+    "DE", "quarterhour", "energy", "forecast")
+FORECAST_WIND_ONSHORE = SmardSeries(
+    "forecast_wind_onshore", 123,
+    "Prognostizierte Erzeugung: Wind Onshore (Day-Ahead)",
+    "DE", "quarterhour", "energy", "forecast")
+FORECAST_WIND_OFFSHORE = SmardSeries(
+    "forecast_wind_offshore", 3791,
+    "Prognostizierte Erzeugung: Wind Offshore (Day-Ahead)",
+    "DE", "quarterhour", "energy", "forecast")
+FORECAST_SOLAR = SmardSeries(
+    "forecast_solar", 125,
+    "Prognostizierte Erzeugung: Photovoltaik (Day-Ahead)",
+    "DE", "quarterhour", "energy", "forecast")
+
+FORECAST = [
+    FORECAST_LOAD, FORECAST_WIND_ONSHORE,
+    FORECAST_WIND_OFFSHORE, FORECAST_SOLAR,
+]
+
 # Columns whose sum defines residual load. Residual = load - these.
 # Stated explicitly so the definition lives in exactly one place
 # (methodology "decisions"): wind + solar only, not hydro/biomass.
@@ -128,6 +154,7 @@ def raw_series() -> list[SmardSeries]:
         PRICE,
         COMMERCIAL_NETEXPORT_OLD,
         COMMERCIAL_NETEXPORT_NEW,
+        *FORECAST,
     ]
 
 

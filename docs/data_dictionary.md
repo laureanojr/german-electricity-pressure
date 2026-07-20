@@ -129,15 +129,23 @@ Forecasts are submitted by the four TSOs by 18:00 for the following day. [WF] Th
 the wind/PV forecasts are quarter-hourly; "Other" forecast generation is a SMARD-computed
 difference (total − wind/PV). [M §D 1.2]
 
+All IDs below confirmed [CFG] as **day-ahead** forecast series (dashed lines in the config;
+grouped with 122/715, which exist only day-ahead — intraday has only wind/PV). Quarter-hour, MWh.
+
 | Series (EN / DE) | Filter ID | ID status | Grain | Notes |
 |---|---|---|---|---|
-| Forecast load / Prognostizierter Stromverbrauch: Gesamt (Netzlast) | 411 | probe-verified [API] | 15-min | 2019 forecast ≈ 10,648 vs realised ≈ 11,724 MWh/15-min — genuinely a forecast. [API] |
-| Forecast total generation / Prognostizierte Erzeugung: Gesamt | 122 | probe-verified [API] | hour or 15-min by region [M §D 1.2] | |
-| Forecast wind onshore / Prognostizierte Erzeugung: Wind Onshore | 123 | probe-verified [API] | 15-min | |
-| Forecast wind offshore / Prognostizierte Erzeugung: Wind Offshore | 3791 | probe-verified [API] | 15-min | |
-| Forecast solar / Prognostizierte Erzeugung: Photovoltaik | 125 | probe-verified [API] | 15-min | 0 overnight, bell curve by day. [API] |
-| Forecast "other" generation / Sonstige Prognostizierte Stromerzeugung | 715 | unconfirmed [enum-unofficial] | — | SMARD-computed (total − wind/PV). [M §D 1.2] |
-| Forecast residual load / Prognostizierter Stromverbrauch: Residuallast | — | ID not identified | 15-min | Exists as an official category [M §D 2.2.2]; ID not found. Or derive = fc load − fc wind − fc solar (match the realised-side definition). |
+| Forecast load / Prognostizierter Stromverbrauch: Gesamt (Netzlast) | 411 | confirmed [CFG] | 15-min | Used in `fact_forecast_hourly`. |
+| Forecast total generation / Prognostizierte Erzeugung: Gesamt | 122 | confirmed [CFG] | hour or 15-min by region [M §D 1.2] | Not used (residual derived from parts). |
+| Forecast wind onshore / Prognostizierte Erzeugung: Wind Onshore | 123 | confirmed [CFG] | 15-min | Used. |
+| Forecast wind offshore / Prognostizierte Erzeugung: Wind Offshore | 3791 | confirmed [CFG] | 15-min | Used. |
+| Forecast solar / Prognostizierte Erzeugung: Photovoltaik | 125 | confirmed [CFG] | 15-min | Used. 0 overnight, bell curve by day. [API] |
+| Forecast "other" generation / Sonstige Prognostizierte Stromerzeugung | 715 | confirmed [CFG] | 15-min | SMARD-computed (total − wind/PV). [M §D 1.2] Not used. |
+| Forecast residual load | *derived* | — | 15-min | **Derived** in `fact_forecast_hourly` as fc_load − fc_wind − fc_solar, so it matches the realised residual definition exactly. SMARD publishes a "Prognostizierte Residuallast" category too, but deriving keeps the forecast error apples-to-apples. |
+
+**`fact_forecast_hourly`** (built by `scripts/build_forecast_hourly.py`) holds, per UTC hour:
+`forecast_*` and `actual_*` for load / wind (onshore+offshore) / solar / residual, plus
+`error_* = forecast − actual` (positive = over-forecast). MAE and other summaries are computed in
+the analysis layer.
 
 ### Cross-border trade — **resolved** [CFG] confirms the identities; coverage stitches across the full window
 
@@ -196,8 +204,8 @@ window. Physical flow (714 and its successors) stays out of that column.
 Most of the earlier gaps are now closed by the official config [CFG] and the cross-border
 bisection. Remaining items:
 
-- The **forecast-residual-load** filter ID (forecast side of Residuallast) — not yet pulled from
-  [CFG]; either find it in the config or derive fc-residual = fc-load − fc-wind − fc-solar.
+- ~~The forecast-residual-load filter ID~~ — resolved: derived in `fact_forecast_hourly`
+  (fc_load − fc_wind − fc_solar), matching the realised residual definition.
 - `data_id 661`'s commercial label — settled well enough via [WC-DE] + values, but a 5-minute
   Download-Center reconfirm is cheap insurance.
 - Pumped-storage consumption (4387) — not in the config slice read this session.
