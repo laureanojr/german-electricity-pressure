@@ -31,8 +31,9 @@ reasoning, not an official statement.
    `market_data_configuration.json` [CFG] is the authoritative name↔ID map: every module lists its
    `data_id` (= chart_data filter), name, unit and source resolution. All in-scope IDs are now
    confirmed there (load, residual, every generation fuel, commercial vs physical net export).
-   Filter tag [CFG] added to the data dictionary. (Still to pull from [CFG]: the forecast-residual
-   ID; and 4387 pumped-storage consumption.)
+   Filter tag [CFG] added to the data dictionary. The forecast-residual ID is resolved by deriving
+   it, and 4387 (pumped-storage consumption) was confirmed against [CFG] on 2026-07-21 — nothing
+   from the ID map is left open.
 
 2. **How badly does incomplete generation coverage bias residual load?** Official: realised
    generation is fully measured across all zones **only for Wind Offshore and Nuclear**; biomass,
@@ -93,7 +94,12 @@ reasoning, not an official statement.
 
 `scripts/reconcile_2025.py` compares completed-2025 aggregates from `fact_hourly`
 against Bundesnetzagentur's published figures [BNetzA-PR]. All four are within tolerance,
-and it fails loudly if any drifts:
+and it fails loudly if any drifts. This now runs in CI as a real gate:
+`tests/test_reconcile_real_2025.py` reconciles a committed ~350 KB slice of the actual 2025
+data (`tests/fixtures/fact_2025_reconcile.parquet`, the reconcile columns only) against the
+official figures on every push — so the check no longer depends on someone running the script
+locally against the gitignored full dataset. Regenerate the fixture with
+`python scripts/reconcile_2025.py --emit-fixture tests/fixtures/fact_2025_reconcile.parquet`.
 
 | Metric | `fact_hourly` | Official | Diff |
 |---|---|---|---|
@@ -133,8 +139,9 @@ market data", press release 2026-01-05.
 
 ## What Step 1 must close before moving on
 
-- Filter ID ↔ name bindings — done via [CFG]. Left over: pull the forecast-residual ID and 4387
-  from the config, and a cheap Download-Center reconfirm of the retired 661.
+- Filter ID ↔ name bindings — done via [CFG]. The forecast-residual ID is derived and 4387 is
+  confirmed [CFG] (2026-07-21); the only residual item is an optional Download-Center reconfirm of
+  the retired 661, which isn't possible via config (661 is absent there) and isn't blocking.
 - Commercial cross-border coverage — **RESOLVED.** SMARD's config [CFG] confirms `4629` =
   "Kommerzieller Nettoexport" (commercial) and `714` = "Physikalischer Nettoexport" (physical).
   Commercial net export spans the full window via two data_ids of the *same* concept: **661

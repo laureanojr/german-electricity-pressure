@@ -51,10 +51,15 @@ python scripts/reconcile_2025.py
 adds residual/price deciles, VRE coverage, net-import & negative-price flags —
 the dashboard base), and `mart_daily_summary` (one row per Berlin day).
 
-The 2025 reconciliation currently passes on all four metrics — net generation
-437.90 vs 437.6 TWh, day-ahead price €89.32 (exact), net imports 21.92 vs 21.9 TWh,
-and 573 negative-price hours (exact). Details and the pinned "net generation"
-definition are in [`docs/methodology.md`](docs/methodology.md).
+The 2025 reconciliation passes on all four metrics — net generation 437.90 vs
+437.6 TWh, day-ahead price €89.32 (exact), net imports 21.92 vs 21.9 TWh, and 573
+negative-price hours (exact). It runs in CI as a real gate: because `data/` is
+gitignored, `tests/test_reconcile_real_2025.py` reconciles a committed ~350 KB
+slice of the actual 2025 data (`tests/fixtures/fact_2025_reconcile.parquet`)
+against the official figures on every push. Regenerate that fixture with
+`python scripts/reconcile_2025.py --emit-fixture tests/fixtures/fact_2025_reconcile.parquet`.
+Details and the pinned "net generation" definition are in
+[`docs/methodology.md`](docs/methodology.md).
 
 Outputs: `data/processed/fact_hourly.parquet` and table `fact_hourly` in
 `data/processed/gep.duckdb`. The build **fails loudly** if a required series has a
@@ -94,4 +99,5 @@ pytest -q
 
 CI runs both on every push. Tests use fixtures (no network), including the with-teeth
 check that an hour equals the **sum** of its four quarter-hours, that DST days carry 23/25
-hours, and that the coverage assertion actually fails on a structural gap.
+hours, that the coverage assertion actually fails on a structural gap, and that the real
+2025 aggregates still reconcile against the official Bundesnetzagentur figures.

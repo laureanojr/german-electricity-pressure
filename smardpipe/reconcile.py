@@ -32,6 +32,11 @@ OFFICIAL_SOURCE = (
     "(press release 2026-01-05)"
 )
 
+# Columns the reconciliation actually reads. Used to carve the small CI fixture
+# (tests/fixtures/fact_2025_reconcile.parquet) so the with-teeth gate can run in
+# CI without the full, gitignored fact_hourly.
+RECONCILE_COLUMNS = GENERATION_COLUMNS + ("day_ahead_price", "net_import", "year")
+
 
 @dataclass(frozen=True)
 class Metric:

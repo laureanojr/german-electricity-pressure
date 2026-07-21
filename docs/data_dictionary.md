@@ -82,10 +82,16 @@ which is why a 2019 start sits cleanly inside a single zone definition. [WC cont
 |---|---|---|---|---|
 | Total grid load / Stromverbrauch: Gesamt (Netzlast) | 410 | confirmed [CFG] + probe [API] | 15-min + hour | MWh |
 | Residual load, realised / Stromverbrauch: Residuallast | 4359 | confirmed [CFG] + probe [API] | 15-min + hour | MWh |
-| Pumped-storage consumption / Stromverbrauch: Pumpspeicher | 4387 | unconfirmed (not in [CFG] slice read) | 15-min + hour | MWh |
+| Pumped-storage consumption / Stromverbrauch: Pumpspeicher | 4387 | confirmed [CFG] (read 2026-07-21) | 15-min + hour | MWh |
 
 SMARD publishes a realised residual load of its own (4359). The project computes its own residual
 (load − wind − solar); keep them separate. [M §D 2.1.2 defines Residuallast]
+
+On 4387: the current config carries three "Pumpspeicher" modules distinguished by `data_id`, not
+name — `4070` realised generation, `4074` an annual (year-resolution, MW) series, and `4387` the
+quarter-hour MWh consumption series in the Stromverbrauch grouping. So `4387` = pumped-storage
+consumption is settled by [CFG] (read 2026-07-21). It is **not ingested** — no project column needs
+it — so this only closes a documentation gap. [CFG]
 
 ### Generation — filter IDs officially confirmed [CFG]
 
@@ -181,8 +187,12 @@ window. Physical flow (714 and its successors) stays out of that column.
 > Note: `data_id 661` is not in the *current* config file (it's a retired series still served by
 > the chart-data host); its commercial identity rests on the official German trade-page deep-link,
 > where module `22000661` is listed under "kommerzieller Außenhandel" [WC-DE], plus its net-export
-> value shape [API]. Worth a 5-minute reconfirm in the Download Center when convenient, but the
-> commercial-vs-physical question itself is now settled by [CFG].
+> value shape [API]. Rechecked 2026-07-21: the current config still lists the DE-LU commercial net
+> export only as `4629` (plus LU-only `4624` and Creos `4625`) — 661 is absent, as expected for a
+> retired series, so a config-based reconfirm isn't possible. A Download-Center check is the only
+> remaining avenue, and it isn't blocking: 661 supplies only 2019 → 2020-12-31 and its net-export
+> value shape already matches the commercial concept. The commercial-vs-physical question itself is
+> settled by [CFG].
 
 ---
 
@@ -206,8 +216,10 @@ bisection. Remaining items:
 
 - ~~The forecast-residual-load filter ID~~ — resolved: derived in `fact_forecast_hourly`
   (fc_load − fc_wind − fc_solar), matching the realised residual definition.
-- `data_id 661`'s commercial label — settled well enough via [WC-DE] + values, but a 5-minute
-  Download-Center reconfirm is cheap insurance.
-- Pumped-storage consumption (4387) — not in the config slice read this session.
+- `data_id 661`'s commercial label — 661 is retired and absent from the current config (rechecked
+  2026-07-21), so a config reconfirm isn't possible; identity rests on [WC-DE] + net-export value
+  shape. Not blocking (2019 → 2020-12-31 only). A Download-Center check is the sole remaining avenue.
+- ~~Pumped-storage consumption (4387)~~ — **confirmed [CFG]** (2026-07-21) as the quarter-hour MWh
+  Pumpspeicher consumption series, distinct from generation 4070. Not ingested.
 - Everything else (load, residual, all generation fuels, price, day-ahead forecasts, commercial
   net export 4629, physical net export 714) is confirmed via [CFG] and/or live probes.

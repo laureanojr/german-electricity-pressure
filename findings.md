@@ -206,11 +206,15 @@ SMARD-published series.
 These don't change the findings but bound them. The 2025 reconciliation against
 the Bundesnetzagentur press release passes (generation 437.9 vs 437.6 TWh,
 average day-ahead €89.32 exact, net imports 21.92 vs 21.9 TWh, 573 negative-price
-hours exact), but it's a script, not yet a CI gate — `data/` is gitignored, so
-wiring it in needs a small design choice about fixtures. Two minor series items
-stay open in the docs: pumped-storage consumption (4387) and a Download-Center
-reconfirm of the retired 661 commercial-trade series. Neither touches the columns
-these four findings rest on.
+hours exact), and it now runs in CI as a real gate: `tests/test_reconcile_real_2025.py`
+reconciles a committed ~350 KB slice of the actual 2025 data against the official
+figures on every push, rather than only when the script is run locally against the
+gitignored full dataset. Of the two minor series items, pumped-storage consumption
+(4387) is now confirmed against SMARD's config (2026-07-21) and stays out of scope
+(no column ingests it); the retired 661 commercial-trade series can't be reconfirmed
+via the config — it's absent there, as expected — so its identity rests on the
+documented trade-page evidence, and it only supplies 2019–2020 regardless. Neither
+touches the columns these four findings rest on.
 
 To reproduce every number above: `python scripts/run_findings.py` (or pass a file
 stem, e.g. `run_findings.py price_by_pressure`).
