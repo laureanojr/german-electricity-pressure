@@ -24,6 +24,9 @@ data/processed/*
 # Outputs
 outputs/*
 
+# Dashboard extracts (regenerable via scripts/export_data_studio.py)
+exports/
+
 # DuckDB
 *.duckdb
 *.duckdb.wal

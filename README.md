@@ -8,9 +8,12 @@ not a trading or dispatch tool.
 
 **Status:** Complete. The data pipeline (download → `fact_hourly` → forecasts → marts) is
 built and tested; the four analyses are written up in [`findings.md`](findings.md) with
-reproducible SQL; and an interactive Streamlit dashboard sits on top. CI runs `ruff` and
+reproducible SQL; and a 3-page Data Studio dashboard sits on top. CI runs `ruff` and
 `pytest` on every push, including a reconciliation gate against Bundesnetzagentur's official
 2025 figures.
+
+**Live dashboard (Data Studio):** _link coming once published_ — build guide and data
+extracts in [`docs/dashboard_data_studio.md`](docs/dashboard_data_studio.md).
 
 ## Data source
 
@@ -86,38 +89,63 @@ One row per UTC hour, and you can trust the units:
 
 ```
 smardpipe/        pipeline package (series, download, transform, build, forecast, reconcile, mart)
-scripts/          thin CLIs: download_smard, build_fact_hourly, build_forecast_hourly, build_mart, reconcile_2025, run_findings
+scripts/          thin CLIs: download_smard, build_fact_hourly, build_forecast_hourly, build_mart, reconcile_2025, run_findings, export_data_studio
 sql/              mart_conditions_hourly.sql, mart_daily_summary.sql (DuckDB transforms)
 sql/findings/     the four analyses as reproducible SQL (backs findings.md)
-dashboard/        Streamlit app (app.py) + testable query layer (queries.py)
+dashboard/        local Streamlit app (app.py) + testable query layer (queries.py)
 tests/            fixture-based unit tests (units, DST, gaps, stitch, coverage, forecast, reconcile, marts, dashboard)
-docs/             data_dictionary.md, methodology.md
+docs/             data_dictionary.md, methodology.md, dashboard_data_studio.md (Data Studio build guide)
 findings.md       the four analyses written up, each number traceable to sql/findings/
+exports/          Data Studio CSV extracts (gitignored; regenerate with export_data_studio)
 data/             raw/ and processed/ (gitignored)
 ```
 
-## Findings & dashboard
+## Findings
 
 The four analyses (residual load, price by pressure, import reliance, forecast
 accuracy) are written up in [`findings.md`](findings.md); every number is
 produced by SQL in `sql/findings/` and reproducible with `python scripts/run_findings.py`.
 
-The same views are explorable interactively. The dashboard has its own
-dependency file, installed in a **separate virtualenv**: its Streamlit caps
-`pyarrow<25`, which conflicts with the `pyarrow==25.0.0` pinned for the pipeline,
-so the two stacks don't share an environment (this also keeps CI lean).
+## Dashboard
+
+The portfolio dashboard is a **3-page Data Studio report** (System Pressure ·
+Imports & Price Conditions · Forecast Quality & Data Notes) with a public link.
+(Data Studio is Google's free reporting tool — briefly named Looker Studio from
+2022, renamed back to Data Studio in April 2026.) It sits on CSV extracts from
+the marts:
 
 ```bash
-python3 -m venv .venv-dashboard
-source .venv-dashboard/bin/activate
+python scripts/export_data_studio.py        # writes exports/data_studio/*.csv
+```
+
+Then build and publish following
+[`docs/dashboard_data_studio.md`](docs/dashboard_data_studio.md) — it maps
+each CSV to each page, lists the charts, filter controls, and calculated fields,
+and covers publishing the public link. Two things Data Studio can't compute over
+a live table (the decile **median** and the **duration curve**) are precomputed
+in SQL on purpose.
+
+A local **Streamlit** app (`dashboard/app.py`) covers the same views for
+development. It's optional and installed in a separate virtualenv, because its
+Streamlit caps `pyarrow<25` while the pipeline pins `pyarrow==25.0.0`:
+
+```bash
+python3 -m venv .venv-dashboard && source .venv-dashboard/bin/activate
 pip install -r requirements-dashboard.txt
 streamlit run dashboard/app.py
 ```
 
-It reads `data/processed/gep.duckdb` read-only (built by the pipeline venv) and
-filters by year and season. All its SQL lives in `dashboard/queries.py` and is
-unit-tested against a synthetic database, so it's covered by `pytest` in the
-pipeline venv without needing the gitignored data or the UI stack.
+Its SQL lives in `dashboard/queries.py` and is unit-tested against a synthetic
+database, so it's covered by `pytest` in the pipeline venv without the UI stack.
+
+## Later / roadmap (deliberately deferred)
+
+v1 is one source, four analyses, one dashboard. Consciously left out: intraday
+and balancing prices; physical cross-border flows (kept the commercial series
+only); a weather/VRE-capacity join to normalise forecast error; per-fuel
+merit-order attribution; and automated refresh/scheduling. Each is a real
+extension, none is needed to answer the v1 question, and leaving them out is the
+point — see the caveats in [`docs/methodology.md`](docs/methodology.md).
 
 ## Tests
 
