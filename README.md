@@ -6,8 +6,11 @@ when the country leans on imports, and when wholesale prices spike — and measu
 ahead you can see it coming from day-ahead forecasts. It is a screening / reporting tool,
 not a trading or dispatch tool.
 
-**Status:** Step 1 (data foundation). The download → `fact_hourly` pipeline is built and
-tested; the four analyses and dashboard come later.
+**Status:** Complete. The data pipeline (download → `fact_hourly` → forecasts → marts) is
+built and tested; the four analyses are written up in [`findings.md`](findings.md) with
+reproducible SQL; and an interactive Streamlit dashboard sits on top. CI runs `ruff` and
+`pytest` on every push, including a reconciliation gate against Bundesnetzagentur's official
+2025 figures.
 
 ## Data source
 
@@ -17,7 +20,7 @@ are documented in [`docs/data_dictionary.md`](docs/data_dictionary.md); open que
 modelling decisions in [`docs/methodology.md`](docs/methodology.md). Every factual claim in
 those docs is traceable to an official SMARD source.
 
-## Reproduce Step 1
+## Reproduce the data build
 
 Requires Python 3.12 and the pinned deps.
 

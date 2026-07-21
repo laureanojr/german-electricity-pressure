@@ -1,4 +1,4 @@
-# Methodology — Step 1 notes and open questions
+# Methodology — data-foundation decisions and open questions
 
 Point of this file: distrust the data first, and write down every gap before building anything.
 Same provenance rule as the data dictionary — a claim I state as *fact* is tagged to an official
@@ -137,7 +137,11 @@ Source: **[BNetzA-PR]** Bundesnetzagentur, "Bundesnetzagentur publishes 2025 ele
 market data", press release 2026-01-05.
 `https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/EN/2026/20260104_SMARD.html`
 
-## What Step 1 must close before moving on
+## What the data foundation had to settle (and how each landed)
+
+These were the gates before building the analyses. The ID and coverage questions are resolved; the
+rest are carried into `findings.md` as stated caveats rather than silent assumptions — which is how
+they read there now that the four analyses and the dashboard are built.
 
 - Filter ID ↔ name bindings — done via [CFG]. The forecast-residual ID is derived and 4387 is
   confirmed [CFG] (2026-07-21); the only residual item is an optional Download-Center reconfirm of
