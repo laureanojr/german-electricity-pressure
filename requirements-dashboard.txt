@@ -1,0 +1,17 @@
+# Dashboard-only dependencies — install in a SEPARATE virtualenv from the
+# pipeline/CI venv. Streamlit currently caps pyarrow<25, which conflicts with the
+# pyarrow==25.0.0 pinned in requirements.txt, so the two stacks can't share one
+# environment. Keeping them apart also keeps CI (ruff + pytest) lean.
+#
+#     python3 -m venv .venv-dashboard
+#     source .venv-dashboard/bin/activate
+#     pip install -r requirements-dashboard.txt
+#     streamlit run dashboard/app.py
+#
+# The app reads data/processed/gep.duckdb read-only (built by the pipeline venv);
+# it doesn't need the pipeline installed. pyarrow is left unpinned so pip can
+# satisfy Streamlit.
+duckdb==1.5.4
+pandas==3.0.3
+streamlit==1.59.2
+plotly==6.9.0

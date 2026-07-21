@@ -83,12 +83,38 @@ One row per UTC hour, and you can trust the units:
 
 ```
 smardpipe/        pipeline package (series, download, transform, build, forecast, reconcile, mart)
-scripts/          thin CLIs: download_smard, build_fact_hourly, build_forecast_hourly, build_mart, reconcile_2025
+scripts/          thin CLIs: download_smard, build_fact_hourly, build_forecast_hourly, build_mart, reconcile_2025, run_findings
 sql/              mart_conditions_hourly.sql, mart_daily_summary.sql (DuckDB transforms)
-tests/            fixture-based unit tests (units, DST, gaps, stitch, coverage, forecast, reconcile, marts)
+sql/findings/     the four analyses as reproducible SQL (backs findings.md)
+dashboard/        Streamlit app (app.py) + testable query layer (queries.py)
+tests/            fixture-based unit tests (units, DST, gaps, stitch, coverage, forecast, reconcile, marts, dashboard)
 docs/             data_dictionary.md, methodology.md
+findings.md       the four analyses written up, each number traceable to sql/findings/
 data/             raw/ and processed/ (gitignored)
 ```
+
+## Findings & dashboard
+
+The four analyses (residual load, price by pressure, import reliance, forecast
+accuracy) are written up in [`findings.md`](findings.md); every number is
+produced by SQL in `sql/findings/` and reproducible with `python scripts/run_findings.py`.
+
+The same views are explorable interactively. The dashboard has its own
+dependency file, installed in a **separate virtualenv**: its Streamlit caps
+`pyarrow<25`, which conflicts with the `pyarrow==25.0.0` pinned for the pipeline,
+so the two stacks don't share an environment (this also keeps CI lean).
+
+```bash
+python3 -m venv .venv-dashboard
+source .venv-dashboard/bin/activate
+pip install -r requirements-dashboard.txt
+streamlit run dashboard/app.py
+```
+
+It reads `data/processed/gep.duckdb` read-only (built by the pipeline venv) and
+filters by year and season. All its SQL lives in `dashboard/queries.py` and is
+unit-tested against a synthetic database, so it's covered by `pytest` in the
+pipeline venv without needing the gitignored data or the UI stack.
 
 ## Tests
 
