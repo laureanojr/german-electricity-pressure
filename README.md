@@ -12,8 +12,9 @@ reproducible SQL; and a 3-page Data Studio dashboard sits on top. CI runs `ruff`
 `pytest` on every push, including a reconciliation gate against Bundesnetzagentur's official
 2025 figures.
 
-**Live dashboard (Data Studio):** _link coming once published_ — build guide and data
-extracts in [`docs/dashboard_data_studio.md`](docs/dashboard_data_studio.md).
+**Live dashboard (Data Studio):** https://datastudio.google.com/reporting/ca674ae8-be6a-44d3-8357-f391de74f527
+(public, no sign-in — 3 pages: System Pressure · Imports & Price Conditions · Forecast Quality &
+Data Notes). Build guide and data extracts in [`docs/dashboard_data_studio.md`](docs/dashboard_data_studio.md).
 
 ## Data source
 
