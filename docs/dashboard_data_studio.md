@@ -37,10 +37,19 @@ SQL where they're reproducible and testable.
 
 ## 2. Connect the data in Data Studio
 
-For each CSV: **Create → Data source → File Upload → upload the CSV**. Simplest,
-free, and the resulting report publishes to a public link. (If you'd rather the
-report refresh when the data changes, paste each CSV into its own Google Sheet
-tab and use the Google Sheets connector instead — same field names, live refresh.)
+Put the six CSVs in **one Google Sheet with six tabs** (one tab per file, tab
+name = file name), then in Data Studio **Add data → Google Sheets** and add each
+tab as a source. Set the Sheet's sharing to **"Anyone with the link → Viewer"**
+and each data source's credentials to **Owner's credentials** — this is what lets
+anonymous visitors load the data on a public link, and it live-refreshes when the
+Sheet changes.
+
+Do **not** use the **File Upload** (uploaded CSV) connector for a report you plan
+to publish. Uploaded datasets stay private to your Google account and can't be
+served to anonymous viewers, so on a public link every chart renders *"a system
+error occurred"* for everyone but you — even with Owner's credentials set. File
+Upload is fine while prototyping privately; just migrate the sources to Google
+Sheets before publishing (same field names, so charts remap by name).
 
 Check field types after upload: `year`, `month`, `hour_local`, `residual_decile`,
 `price_decile` should be **Number** (or Dimension where used as an axis);
@@ -137,10 +146,15 @@ doubled with the growing PV fleet, not method drift.*
 3. Copy the link and paste it into the README's "Live dashboard" line.
 4. Optional: **File → Embed report** if you want to embed it anywhere.
 
+The link only shows data if the sources are **Google Sheets** (shared "anyone
+with the link → Viewer") on **Owner's credentials**. File-Upload sources make
+every chart error for anonymous visitors — see §2. Test the published link in an
+incognito window to confirm data actually loads, not just the page frame.
+
 ## 7. Maintenance ("who runs this every week?")
 
 To refresh after a data rebuild: re-run `python scripts/export_data_studio.py`,
-then in each File-Upload data source click **Edit → re-upload** the CSV (or, if
-you used Google Sheets, just repaste — the report refreshes on its own). Nothing
-in the report layout has to change; the schema is stable. Keep the report on the
-same six sources so the public link never changes.
+then repaste (or re-import) each CSV into its Google Sheet tab — the report
+refreshes on its own, no re-upload step. Nothing in the report layout has to
+change; the schema is stable. Keep the report on the same six sources so the
+public link never changes.
